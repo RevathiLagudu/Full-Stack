@@ -35,24 +35,63 @@ class UserController {
         }
     }
 
+    @Get
+    @Status(HttpStatus.CREATED)
+    def GetAllUsers(){
+        try{
+            def users=userService.fetchAllUsers()
+            if(users && !users.isEmpty()){
+                return HttpResponse.ok(users)
+            }else{
+                return HttpResponse.noContent()//no user found
+            }
+        }catch (Exception e){
+            return HttpResponse.serverError("An error occured:${e.message}")
+        }
+    }
+
+
+    @Post("/login")
+    @Status(HttpStatus.OK)
+    def login(@Body UserModel userModel){
+        try{
+            // Assuming userService.authenticate returns a user object if credentials are valid
+            def user=userService.userLogin(userModel.email,userModel.password)
+            if(user){
+                return HttpResponse.ok(user)
+            }else{
+                return HttpResponse.unauthorized("Invalid email or password")
+            }
+        }catch(Exception e){
+            return HttpResponse.serverError("An error occurred:${e.message}")
+        }
+    }
+
     @Get("/{id}")
     def getById(@PathVariable long id){
         return userService.fetchById(id)
     }
 
-    @Get
-    def GetAllUsers(){
-        return userService.fetchAllUsers()
+    @Delete("/{id}")
+    //@Status(HttpStatus.NO_CONTENT): Sets the default status code for the response to 204 No Content, indicating a successful deletion with no content returned.
+    @Status(HttpStatus.NO_CONTENT)
+    def deleteById(@PathVariable long id){
+        try {
+            boolean delete=userService.deleteUser(id)
+            if(delete){
+                return HttpResponse.noContent()// Successfully deleted
+            }else{
+                return HttpResponse.notFound("user not found")
+            }
+        }catch (Exception e){
+            return HttpResponse.serverError("An error occurred: ${e.message}")
+        }
+
     }
 
-    @Post("/login")
-    def login(@Body UserModel userModel){
-        return userService.userLogin(userModel.email , userModel.password)
-    }
-    @Delete
-    def deleteById(@PathVariable long id){
-        return userService.deleteUser(id)
-    }
+
+
+
 
     @Put
     def updateUser(@PathVariable long id ,@Body UserModel userModel){
