@@ -40,12 +40,19 @@ class UserController {
     def GetAllUsers(){
         try{
             def users=userService.fetchAllUsers()
+            // if (users && !users.isEmpty()): Checks if the users list is not null and not empty.
             if(users && !users.isEmpty()){
+                // return HttpResponse.ok(users): If the list is not empty,
+                // it returns an HTTP response with status 200 OK and the list of users.
                 return HttpResponse.ok(users)
             }else{
+                return HttpResponse.noContent(): If the list is empty, it returns an HTTP response with status 204 No Content,
+                    // indicating that no users were found.
                 return HttpResponse.noContent()//no user found
             }
         }catch (Exception e){
+            // return HttpResponse.serverError("An error occurred: ${e.message}"):
+            // Returns an HTTP response with status 500 Internal Server Error and includes the exception message in the response body.
             return HttpResponse.serverError("An error occured:${e.message}")
         }
     }
