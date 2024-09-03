@@ -12,10 +12,10 @@ class BooksService {
 
     @Transactional
     def saveBooks(BooksModel booksModel){
-        BooksDomain users=BooksModel.toBooks(booksModel)
+        BooksDomain book=BooksModel.toBooks(booksModel)
         try{
-            users.save()
-            return users
+            book.save()
+            return book
         }
         catch (Exception){
             throw new UserAllReadyExistException("data Already exist")

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate=useNavigate()
 
   // Handle input changes
   const handleChange = (e) => {
@@ -18,34 +20,30 @@ const Login = () => {
     }
   };
 
-  // Validate form inputs
-  const validate = () => {
-    const newErrors = {};
-    if (!email) newErrors.email = 'Email is required';
-    if (!password) newErrors.password = 'Password is required';
-    return newErrors;
-  };
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
     setIsSubmitting(true);
+    setError('');
     setMessage('');
+
     try {
       const response = await axios.post('http://localhost:8081/users/login', {
         email,
         password
       });
+
+      navigate('/orderDetails')
+
+      // Handle successful login (e.g., save token, redirect user)
       setMessage('Login successful!');
       console.log('Login successful:', response.data);
-      // Handle successful login (e.g., store token, redirect user)
+
+      // Optionally save token to localStorage or state
+      localStorage.setItem('authToken', response.data.token);
+
     } catch (error) {
-      setMessage('Error logging in. Please check your credentials.');
+      setError('Invalid email or password. Please try again.');
       console.error('Error logging in:', error);
     } finally {
       setIsSubmitting(false);
@@ -64,10 +62,9 @@ const Login = () => {
             name="email"
             value={email}
             onChange={handleChange}
+            required
           />
-          {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
         </div>
-
         <div>
           <label htmlFor="password">Password:</label>
           <input
@@ -76,16 +73,15 @@ const Login = () => {
             name="password"
             value={password}
             onChange={handleChange}
+            required
           />
-          {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
         </div>
-
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
-
-        {message && <p style={{ color: isSubmitting ? 'green' : 'red' }}>{message}</p>}
       </form>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p style={{ color: 'green' }}>{message}</p>}
     </div>
   );
 };

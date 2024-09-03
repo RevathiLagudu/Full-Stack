@@ -35,7 +35,7 @@ class UserService {
     def fetchById(long id){
         UserDomain userDomain=UserDomain.findById(id)
         if(userDomain){
-            return userDomain.email
+            return userDomain
         }
         throw new UserNotFound("this user was not exist")
     }
@@ -71,17 +71,18 @@ class UserService {
     }
 
     @Transactional
-    def updateUser(Long id, UserModel userModel){
-        UserDomain userDomain = UserDomain.findById(id)
-        if (userDomain) {
-            userDomain=UserModel.toUser(userModel)
-
-            return userDomain.save()
+    def updateUser(Long id, UserModel updatedUser){
+        UserDomain users = UserDomain.findById(id)
+        if (users) {
+            users.name = updatedUser.name
+            users.email = updatedUser.email
+            users.address = updatedUser.address
+            users.password=updatedUser.password
+            users.phoneNumber=updatedUser.phoneNumber
+            return users.save()
         } else {
             throw new UserNotFound("User Not Found")
         }
     }
 
-
-
-}
+  }

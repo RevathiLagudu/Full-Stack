@@ -8,6 +8,9 @@ const UsersList = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [updateName, setUpdateName] = useState('');
   const [updateEmail, setUpdateEmail] = useState('');
+  const [updatePassword, setUpdatePassword] = useState('');
+  const [updatePhoneNumber, setUpdatePhoneNumber] = useState('');
+  const [updateAddress, setUpdateAddress] = useState('');
 
   // Fetch users on component mount
   useEffect(() => {
@@ -44,14 +47,20 @@ const UsersList = () => {
         const updatedUser = {
           name: updateName || selectedUser.name,
           email: updateEmail || selectedUser.email,
+          password:updatePassword || selectedUser.password,
+          phoneNumber:updatePhoneNumber || selectedUser.phoneNumber,
+          address:updateAddress || selectedUser.address
         };
-        await axios.put(`http://localhost:8081/users/delete/${selectedUser.id}`, updatedUser);
+        await axios.put(`http://localhost:8081/users/update/${selectedUser.id}`, updatedUser);
         setUsers(users.map(user => 
           user.id === selectedUser.id ? { ...user, ...updatedUser } : user
         ));
         setSelectedUser(null);
         setUpdateName('');
         setUpdateEmail('');
+        setUpdatePassword('');
+        setUpdatePhoneNumber('');
+        setUpdateAddress('');
       } catch (error) {
         setError('Error updating user. Please try again later.');
         console.error('Error updating user:', error);
@@ -96,6 +105,24 @@ const UsersList = () => {
                 value={updateEmail}
                 onChange={(e) => setUpdateEmail(e.target.value)}
                 placeholder="Email"
+              />
+              <input
+                type="password"
+                value={updatePassword}
+                onChange={(e) => setUpdatePassword(e.target.value)}
+                placeholder="Password"
+              />
+              <input
+                type="phoneNumber"
+                value={updatePhoneNumber}
+                onChange={(e) => setUpdatePhoneNumber(e.target.value)}
+                placeholder="PhoneNumber"
+              />
+              <input
+                type="address"
+                value={updateAddress}
+                onChange={(e) => setUpdateAddress(e.target.value)}
+                placeholder="Address"
               />
               <button onClick={handleUpdate}>Save Changes</button>
               <button onClick={() => setSelectedUser(null)}>Cancel</button>

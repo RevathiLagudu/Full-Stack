@@ -48,8 +48,9 @@ class OrderService {
         def orders=OrderDomain.findByUser(user)
         def orderModal=[]
         orders.each {order->
-            return orderModal<<toOrderModal(order)
+             orderModal<<toOrderModal(order)
         }
+        return orderModal
     }
 
     @Transactional
