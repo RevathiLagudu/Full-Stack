@@ -121,16 +121,24 @@ class UserController {
     @ExecuteOn(TaskExecutors.BLOCKING)
     @Delete("/delete/{id}")
     @Status(HttpStatus.NO_CONTENT)
-    def deleteUser(@PathVariable String id) {
+    def deleteUser(@PathVariable long id) {
         try {
             // Send a DELETE request to the other microservice to delete the user with the given ID
             HttpResponse<Void> response = httpClient.toBlocking().exchange(
-                    HttpRequest.DELETE("/user-process/${id}")
+                    HttpRequest.DELETE("/user-process/delete/${id}")
             )
 
             // Check if the response status indicates successful deletion
-            if (response.status == HttpStatus.NO_CONTENT) {
-                return HttpResponse.noContent()  // 204 No Content for successful deletion
+            if (response.status == HttpStatus.NO_CONTENT) {// return HttpResponse.noContent()
+                String kafkaMessage = "User with ID " + id + " has been deleted.";
+
+                // Send the deletion event message via Kafka
+                if (messageProducer.sendMessage(kafkaMessage)) {
+                    return HttpResponse.noContent(); // 204 No Content for successful deletion
+                } else {
+                    return HttpResponse.serverError("Failed to send deletion event to Kafka");
+                }
+
             } else {
                 return HttpResponse.status(response.status).body("Failed to delete user with ID ${id}")
             }
@@ -140,14 +148,34 @@ class UserController {
     }
 
 
-
-
-    @Put("/{userId}")
-    def updateUser(@PathVariable int userId, @Body User user) {
-        return userService.updateUser(userId, user)
+    @ExecuteOn(TaskExecutors.BLOCKING)
+    @Put("/update/{userId}")
+    @Status(HttpStatus.CREATED)
+    def updateUser(@PathVariable long userId, @Body UserRequest userRequest) {
+        try {
+            // Send the UserRequest to the other microservice
+            HttpResponse<User> response = httpClient.toBlocking().exchange(
+                    HttpRequest.PUT("/user-process/update/${userId}", userRequest),
+                    User
+            )
+            // Check if the request was successful
+            return handleResponse(response)
+        } catch (Exception e) {
+            return HttpResponse.serverError("An error occurred: ${e.message}")
+        }
     }
+    private def handleResponse(HttpResponse<User> response) {
+        if (response.status == HttpStatus.CREATED && response.body()) {
+            return messageProducer.sendMessage(response.body()) ?
+                    HttpResponse.ok(response.body()) :
+                    HttpResponse.serverError("Unable to send user object through Kafka")
+        }
+        return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
+    }
+
     @Get("/{userId}")
     def getEmail(@PathVariable int userId){
         return userService.getEmail(userId)
     }
+
 }
